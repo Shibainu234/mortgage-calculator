@@ -422,12 +422,12 @@ with tab2:
 
 # ── Sensitivity table ────────────────────────────────────────────────────────
 st.markdown('<div class="section-title">Citlivostní analýza</div>', unsafe_allow_html=True)
-st.markdown("Rozdíl budoucí hodnoty Případ 1 − Případ 2 (nominálně, v mil. CZK) pro různé kombinace sazeb. **Zelená = Případ 1 vítězí. Červená = Případ 2 vítězí.**")
+st.markdown("Rozdíl budoucí hodnoty Případ 1 − Případ 2 (v mil. CZK) pro různé kombinace sazeb. **Zelená = Případ 1 vítězí. Červená = Případ 2 vítězí.**")
 
-invest_rates  = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+invest_rates   = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 mortgage_rates = [2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
 
-def compute_diff(inv_r, mort_r):
+def compute_diff(inv_r, mort_r, real=False):
     i_  = mort_r / 100 / 12
     s_  = (1 + inv_r / 100) ** (1 / 12) - 1
     a1_ = monthly_payment(P0, i_, N)
@@ -435,17 +435,19 @@ def compute_diff(inv_r, mort_r):
     da_ = a1_ - a2_
     fv1_ = fv_lump_sum(P_init, s_, N)
     fv2_ = fv_monthly_contributions(da_, s_, N)
-    return (fv1_ - fv2_) / 1_000_000  # v milionech
+    if real:
+        deflator = (1 + inflation_rate / 100) ** years
+        fv1_ /= deflator
+        fv2_ /= deflator
+    return (fv1_ - fv2_) / 1_000_000
 
-table_data = {}
-for mort_r in mortgage_rates:
-    col_data = []
-    for inv_r in invest_rates:
-        col_data.append(compute_diff(inv_r, mort_r))
-    table_data[f"{mort_r:.1f}%"] = col_data
-
-sens_df = pd.DataFrame(table_data, index=[f"{r}%" for r in invest_rates])
-sens_df.index.name = "Investice →  /  Hypotéka ↓"
+def build_table(real=False):
+    data = {}
+    for mort_r in mortgage_rates:
+        data[f"{mort_r:.1f}%"] = [compute_diff(inv_r, mort_r, real) for inv_r in invest_rates]
+    df = pd.DataFrame(data, index=[f"{r}%" for r in invest_rates])
+    df.index.name = "Investice →  /  Hypotéka ↓"
+    return df
 
 def color_cells(val):
     if val > 0:
@@ -461,19 +463,25 @@ def color_cells(val):
         b = int(220 - intensity * 80)
         return f"background-color: rgb({r},{g},{b}); color: #5c1a1a; font-weight: 600;"
 
-styled = sens_df.style\
-    .map(color_cells)\
-    .format("{:+.2f} M")\
-    .set_table_styles([
-        {"selector": "th", "props": [("background-color", "#1a1f36"), ("color", "white"),
-                                      ("font-size", "0.8rem"), ("padding", "8px 12px")]},
-        {"selector": "td", "props": [("text-align", "center"), ("padding", "8px 12px"),
-                                      ("font-size", "0.85rem")]},
-        {"selector": "tr:hover td", "props": [("filter", "brightness(0.95)")]},
-    ])
+table_styles = [
+    {"selector": "th", "props": [("background-color", "#1a1f36"), ("color", "white"),
+                                  ("font-size", "0.8rem"), ("padding", "8px 12px")]},
+    {"selector": "td", "props": [("text-align", "center"), ("padding", "8px 12px"),
+                                  ("font-size", "0.85rem")]},
+    {"selector": "tr:hover td", "props": [("filter", "brightness(0.95)")]},
+]
 
-st.dataframe(styled, use_container_width=True)
-st.caption(f"Počítáno pro půjčku {fmt(P0)} CZK, vlastní zdroje {fmt(P_init)} CZK, doba {years:.0f} let. Hodnoty v milionech CZK. Zvýrazněný řádek odpovídá zadaným sazbám.")
+tab_nom, tab_real = st.tabs(["📈 Nominální hodnoty", "💰 Reálné hodnoty (v dnešních Kč)"])
+
+with tab_nom:
+    styled_nom = build_table(real=False).style.map(color_cells).format("{:+.2f} M").set_table_styles(table_styles)
+    st.dataframe(styled_nom, use_container_width=True)
+    st.caption(f"Nominální rozdíl FV1 − FV2 v mil. CZK. Půjčka {fmt(P0)} CZK, vlastní zdroje {fmt(P_init)} CZK, doba {years:.0f} let.")
+
+with tab_real:
+    styled_real = build_table(real=True).style.map(color_cells).format("{:+.2f} M").set_table_styles(table_styles)
+    st.dataframe(styled_real, use_container_width=True)
+    st.caption(f"Reálný rozdíl FV1 − FV2 v mil. CZK (v dnešních Kč, inflace {inflation_rate:.1f} % p.a.). Půjčka {fmt(P0)} CZK, vlastní zdroje {fmt(P_init)} CZK, doba {years:.0f} let.")
 
 # ── Math expander ─────────────────────────────────────────────────────────────
 with st.expander("Matematické vzorce (rozbalit)"):
