@@ -20,8 +20,10 @@ col1, col2 = st.columns(2)
 with col1:
     P0 = st.number_input("Velikost půjčky (CZK)", value=9_000_000, step=100_000, format="%d",
                          help="Celková výše hypotéky bez počáteční investice")
+    st.caption(f"→ {P0:,.0f} CZK".replace(",", "."))
     P_init = st.number_input("Počáteční investice / vlastní zdroje (CZK)", value=2_000_000, step=100_000, format="%d",
                              help="Částka, kterou máš k dispozici — buď ji investuješ, nebo snížíš hypotéku")
+    st.caption(f"→ {P_init:,.0f} CZK".replace(",", "."))
 
 with col2:
     annual_mortgage_rate = st.number_input("Úroková míra hypotéky (% p.a.)", value=4.9, step=0.1, format="%.2f")
