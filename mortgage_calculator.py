@@ -1,6 +1,7 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
+from scipy.optimize import brentq
 
 st.set_page_config(page_title="Hypotéka vs Investice", layout="wide")
 st.title("Hypotéka vs Investice")
@@ -29,12 +30,15 @@ with col2:
     annual_mortgage_rate = st.number_input("Úroková míra hypotéky (% p.a.)", value=4.9, step=0.1, format="%.2f")
     annual_invest_rate = st.number_input("Nominální výnosnost investice (% p.a., před inflací)", value=8.0, step=0.1, format="%.2f",
                                          help="Zadej nominální výnos před inflací — stejná basis jako úroková sazba hypotéky. Např. globální index ~7–8 % p.a. nominálně.")
+    inflation_rate = st.number_input("Inflace (% p.a.)", value=2.5, step=0.1, format="%.2f",
+                                     help="Průměrná roční inflace pro převod na reálnou hodnotu v dnešních penězích. Historický průměr ČR ~2–3 %.")
     years = st.number_input("Doba splatnosti (roky)", value=30, step=1, min_value=1, max_value=50)
 
 # --- Odvozené hodnoty ---
 N = int(years * 12)
 i = annual_mortgage_rate / 100 / 12                        # nominalni mesicni sazba (bankovni konvence)
 s = (1 + annual_invest_rate / 100) ** (1 / 12) - 1        # efektivni mesicni sazba (z rocni vynosnosti)
+inflation_deflator = (1 + inflation_rate / 100) ** years   # kolik bude 1 dnešní Kč stát za N let
 
 st.markdown("---")
 
@@ -61,18 +65,16 @@ def fv_monthly_contributions(A, monthly_rate, n_months):
 # Případ 1: Plná hypotéka, počáteční částka jde do investice
 A1 = monthly_payment(P0, i, N)
 FV1 = fv_lump_sum(P_init, s, N)
+FV1_real = FV1 / inflation_deflator
 
 # Případ 2: Snížená hypotéka, investuji měsíční rozdíl
 loan2 = P0 - P_init
 A2 = monthly_payment(loan2, i, N)
 delta_A = A1 - A2
 FV2 = fv_monthly_contributions(delta_A, s, N)
+FV2_real = FV2 / inflation_deflator
 
-# Hranicni vynosnost (breakeven)
-# FV1 = FV2 => P_init*(1+s)^N = delta_A(s)*((1+s)^N-1)/s
-# Resime numericky
-from scipy.optimize import brentq
-
+# Hraniční výnosnost (breakeven)
 def fv_diff(s_annual):
     sm = (1 + s_annual) ** (1/12) - 1
     a1 = monthly_payment(P0, i, N)
@@ -97,13 +99,13 @@ with col1:
     st.markdown(f"""
 | Položka | Hodnota |
 |---|---|
-| Výše úvěru | **{P0:,.0f} CZK** |
+| Výše úvěru | **{P0:,.0f} CZK**.replace(",",".") |
 | Měsíční splátka | **{A1:,.0f} CZK** |
 | Počáteční investice | **{P_init:,.0f} CZK** |
-| Budoucí hodnota po {years:.0f} letech | **{FV1:,.0f} CZK** |
+| Budoucí hodnota (nominální) | **{FV1:,.0f} CZK** |
+| Budoucí hodnota (reálná, v dnešních Kč) | **{FV1_real:,.0f} CZK** |
 """)
     st.latex(r"FV_1 = P_{init} \cdot (1+s)^N")
-    st.caption(f"= {P_init:,.0f} · (1 + {annual_invest_rate/100/12:.5f})^{N} = {FV1:,.0f} CZK")
 
 with col2:
     st.subheader("Případ 2: Snížená hypotéka + investování rozdílu splátek")
@@ -113,21 +115,26 @@ with col2:
 | Výše úvěru | **{loan2:,.0f} CZK** |
 | Měsíční splátka | **{A2:,.0f} CZK** |
 | Měsíční úspora (investovaná) | **{delta_A:,.0f} CZK** |
-| Budoucí hodnota po {years:.0f} letech | **{FV2:,.0f} CZK** |
+| Budoucí hodnota (nominální) | **{FV2:,.0f} CZK** |
+| Budoucí hodnota (reálná, v dnešních Kč) | **{FV2_real:,.0f} CZK** |
 """)
     st.latex(r"FV_2 = \Delta A \cdot \frac{(1+s)^N - 1}{s}")
-    st.caption(f"= {delta_A:,.0f} · ((1 + {s:.5f})^{N} - 1) / {s:.5f} = {FV2:,.0f} CZK")
 
 st.markdown("---")
 
 # --- Verdikt ---
 diff = FV1 - FV2
+diff_real = FV1_real - FV2_real
 if diff > 0:
-    st.success(f"**Případ 1 (jednorázová investice) je lepší o {diff:,.0f} CZK** po {years:.0f} letech.")
+    st.success(
+        f"**Případ 1 je lepší o {diff:,.0f} CZK nominálně** ({diff_real:,.0f} CZK v dnešních penězích) po {years:.0f} letech."
+    )
     st.markdown(f"Důvod: Váš kapitál **{P_init:,.0f} CZK** má plných **{years:.0f} let** na složené úročení. "
                 f"Měsíční investice v Případu 2 začíná malými částkami, které nemají tolik času růst.")
 else:
-    st.success(f"**Případ 2 (snížená hypotéka + měsíční investice) je lepší o {-diff:,.0f} CZK** po {years:.0f} letech.")
+    st.success(
+        f"**Případ 2 je lepší o {-diff:,.0f} CZK nominálně** ({-diff_real:,.0f} CZK v dnešních penězích) po {years:.0f} letech."
+    )
 
 # --- Hraniční výnosnost ---
 if breakeven_rate is not None:
@@ -147,27 +154,34 @@ st.header("Klíčová čísla")
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Splátka – Případ 1", f"{A1:,.0f} CZK/měs")
 col2.metric("Splátka – Případ 2", f"{A2:,.0f} CZK/měs", delta=f"-{delta_A:,.0f} CZK/měs")
-col3.metric("Budoucí hodnota – Případ 1", f"{FV1:,.0f} CZK")
-col4.metric("Budoucí hodnota – Případ 2", f"{FV2:,.0f} CZK")
+col3.metric("Reálná FV – Případ 1", f"{FV1_real:,.0f} CZK", help="V dnešních penězích po zohlednění inflace")
+col4.metric("Reálná FV – Případ 2", f"{FV2_real:,.0f} CZK", help="V dnešních penězích po zohlednění inflace")
 
 # --- Graf vývoje ---
 st.markdown("---")
 st.header("Vývoj v čase")
 
 months = np.arange(1, N + 1)
-fv1_over_time = P_init * (1 + s)**months
-if s == 0:
-    fv2_over_time = delta_A * months
-else:
-    fv2_over_time = delta_A * ((1 + s)**months - 1) / s
+fv1_nominal = P_init * (1 + s)**months
+fv2_nominal = delta_A * ((1 + s)**months - 1) / s if s != 0 else delta_A * months
+
+inflation_deflator_monthly = (1 + inflation_rate / 100) ** (months / 12)
+fv1_real = fv1_nominal / inflation_deflator_monthly
+fv2_real = fv2_nominal / inflation_deflator_monthly
 
 chart_df = pd.DataFrame({
     "Rok": months / 12,
-    "Případ 1 – jednorázová investice": fv1_over_time,
-    "Případ 2 – měsíční investování rozdílu": fv2_over_time,
+    "Případ 1 – nominální": fv1_nominal,
+    "Případ 2 – nominální": fv2_nominal,
+    "Případ 1 – reálná (dnešní Kč)": fv1_real,
+    "Případ 2 – reálná (dnešní Kč)": fv2_real,
 })
 
-st.line_chart(chart_df, x="Rok", y=["Případ 1 – jednorázová investice", "Případ 2 – měsíční investování rozdílu"])
+tab1, tab2 = st.tabs(["Nominální hodnoty", "Reálné hodnoty (v dnešních Kč)"])
+with tab1:
+    st.line_chart(chart_df, x="Rok", y=["Případ 1 – nominální", "Případ 2 – nominální"])
+with tab2:
+    st.line_chart(chart_df, x="Rok", y=["Případ 1 – reálná (dnešní Kč)", "Případ 2 – reálná (dnešní Kč)"])
 
 # --- Matematické vzorce ---
 with st.expander("Matematické vzorce (rozbalit)"):
@@ -182,6 +196,10 @@ with st.expander("Matematické vzorce (rozbalit)"):
     st.latex(r"FV_2 = \Delta A \cdot \frac{(1+s)^N - 1}{s}")
     st.markdown("kde $\\Delta A = A_1 - A_2$ je měsíční úspora díky snížené hypotéce")
 
+    st.markdown("#### Převod na reálnou hodnotu (dnešní kupní síla)")
+    st.latex(r"FV_{reálná} = \frac{FV_{nominální}}{(1 + \pi)^{roky}}")
+    st.markdown("kde $\\pi$ = roční míra inflace. Inflace se vyruší v porovnání obou případů — neovlivňuje, která strategie vyhraje, ale ukazuje skutečnou kupní sílu.")
+
     st.markdown("#### Proč jednorázová investice často vítězí")
     st.markdown("""
 Protože $P_{init}$ má **plných N let** na složené úročení.
@@ -190,4 +208,4 @@ Exponenciála je extrémně citlivá na čas.
 """)
 
 st.markdown("---")
-st.caption("Zjednodušený model: konstantní sazby, bez daní a poplatků. Obě sazby jsou nominální (před inflací) — inflace se vyruší a na porovnání strategií nemá vliv.")
+st.caption("Zjednodušený model: konstantní sazby, bez daní a poplatků. Výnosnost investice je nominální (před inflací). Reálné hodnoty jsou přepočteny pomocí zadané inflace.")
