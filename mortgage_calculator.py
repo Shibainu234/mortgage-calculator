@@ -154,8 +154,12 @@ st.header("Klíčová čísla")
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Splátka – Případ 1", f"{A1:,.0f} CZK/měs")
 col2.metric("Splátka – Případ 2", f"{A2:,.0f} CZK/měs", delta=f"-{delta_A:,.0f} CZK/měs")
-col3.metric("Reálná FV – Případ 1", f"{FV1_real:,.0f} CZK", help="V dnešních penězích po zohlednění inflace")
-col4.metric("Reálná FV – Případ 2", f"{FV2_real:,.0f} CZK", help="V dnešních penězích po zohlednění inflace")
+
+col3.metric("FV nominální – Případ 1", f"{FV1:,.0f} CZK")
+col3.metric("FV reálná – Případ 1", f"{FV1_real:,.0f} CZK", help="V dnešních penězích po zohlednění inflace")
+
+col4.metric("FV nominální – Případ 2", f"{FV2:,.0f} CZK")
+col4.metric("FV reálná – Případ 2", f"{FV2_real:,.0f} CZK", help="V dnešních penězích po zohlednění inflace")
 
 # --- Graf vývoje ---
 st.markdown("---")
@@ -180,8 +184,10 @@ chart_df = pd.DataFrame({
 tab1, tab2 = st.tabs(["Nominální hodnoty", "Reálné hodnoty (v dnešních Kč)"])
 with tab1:
     st.line_chart(chart_df, x="Rok", y=["Případ 1 – nominální", "Případ 2 – nominální"])
+    st.caption("Nominální hodnoty — bez zohlednění inflace")
 with tab2:
     st.line_chart(chart_df, x="Rok", y=["Případ 1 – reálná (dnešní Kč)", "Případ 2 – reálná (dnešní Kč)"])
+    st.caption("Reálné hodnoty — převedeno do dnešní kupní síly")
 
 # --- Matematické vzorce ---
 with st.expander("Matematické vzorce (rozbalit)"):
