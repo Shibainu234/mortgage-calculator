@@ -99,11 +99,11 @@ with col1:
     st.markdown(f"""
 | Položka | Hodnota |
 |---|---|
-| Výše úvěru | **{P0:,.0f} CZK**.replace(",",".") |
-| Měsíční splátka | **{A1:,.0f} CZK** |
-| Počáteční investice | **{P_init:,.0f} CZK** |
-| Budoucí hodnota (nominální) | **{FV1:,.0f} CZK** |
-| Budoucí hodnota (reálná, v dnešních Kč) | **{FV1_real:,.0f} CZK** |
+| Výše úvěru | **{str(f"{P0:,.0f}").replace(",", ".")} CZK** |
+| Měsíční splátka | **{str(f"{A1:,.0f}").replace(",", ".")} CZK** |
+| Počáteční investice | **{str(f"{P_init:,.0f}").replace(",", ".")} CZK** |
+| Budoucí hodnota (nominální) | **{str(f"{FV1:,.0f}").replace(",", ".")} CZK** |
+| Budoucí hodnota (reálná, v dnešních Kč) | **{str(f"{FV1_real:,.0f}").replace(",", ".")} CZK** |
 """)
     st.latex(r"FV_1 = P_{init} \cdot (1+s)^N")
 
@@ -112,11 +112,11 @@ with col2:
     st.markdown(f"""
 | Položka | Hodnota |
 |---|---|
-| Výše úvěru | **{loan2:,.0f} CZK** |
-| Měsíční splátka | **{A2:,.0f} CZK** |
-| Měsíční úspora (investovaná) | **{delta_A:,.0f} CZK** |
-| Budoucí hodnota (nominální) | **{FV2:,.0f} CZK** |
-| Budoucí hodnota (reálná, v dnešních Kč) | **{FV2_real:,.0f} CZK** |
+| Výše úvěru | **{str(f"{loan2:,.0f}").replace(",", ".")} CZK** |
+| Měsíční splátka | **{str(f"{A2:,.0f}").replace(",", ".")} CZK** |
+| Měsíční úspora (investovaná) | **{str(f"{delta_A:,.0f}").replace(",", ".")} CZK** |
+| Budoucí hodnota (nominální) | **{str(f"{FV2:,.0f}").replace(",", ".")} CZK** |
+| Budoucí hodnota (reálná, v dnešních Kč) | **{str(f"{FV2_real:,.0f}").replace(",", ".")} CZK** |
 """)
     st.latex(r"FV_2 = \Delta A \cdot \frac{(1+s)^N - 1}{s}")
 
