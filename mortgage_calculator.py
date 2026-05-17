@@ -147,12 +147,14 @@ st.markdown('<div class="section-title">Vstupní parametry</div>', unsafe_allow_
 col1, col2 = st.columns(2)
 
 with col1:
-    P0 = st.number_input("Velikost půjčky (CZK)", value=9_000_000, step=100_000, format="%d",
+    P0_m = st.number_input("Velikost půjčky (mil. CZK)", value=9.0, step=0.1, format="%.2f",
                          help="Celková výše hypotéky bez počáteční investice")
-    st.caption(f"→ {P0:,.0f} CZK".replace(",", "."))
-    P_init = st.number_input("Vlastní zdroje / počáteční kapitál (CZK)", value=2_000_000, step=100_000, format="%d",
+    P0 = P0_m * 1_000_000
+    st.caption(f"→ {fmt(P0)} CZK")
+    P_init_m = st.number_input("Vlastní zdroje / počáteční kapitál (mil. CZK)", value=2.0, step=0.1, format="%.2f",
                              help="Částka, kterou máš k dispozici — buď ji investuješ, nebo snížíš hypotéku")
-    st.caption(f"→ {P_init:,.0f} CZK".replace(",", "."))
+    P_init = P_init_m * 1_000_000
+    st.caption(f"→ {fmt(P_init)} CZK")
 
 with col2:
     annual_mortgage_rate = st.number_input("Úroková míra hypotéky (% p.a.)", value=4.9, step=0.1, format="%.2f")
@@ -378,7 +380,7 @@ def color_cells(val):
         return f"background-color: rgb({r},{g},{b}); color: #5c1a1a; font-weight: 600;"
 
 styled = sens_df.style\
-    .applymap(color_cells)\
+    .map(color_cells)\
     .format("{:+.2f} M")\
     .set_table_styles([
         {"selector": "th", "props": [("background-color", "#1a1f36"), ("color", "white"),
