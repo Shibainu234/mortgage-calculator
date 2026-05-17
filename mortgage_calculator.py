@@ -142,6 +142,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── Inputs ────────────────────────────────────────────────────────────────────
+def fmt(n): return str(f"{n:,.0f}").replace(",", ".")
+
 st.markdown('<div class="section-title">Vstupní parametry</div>', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
@@ -167,10 +169,6 @@ with col2:
 # ── Calculations ──────────────────────────────────────────────────────────────
 N                  = int(years * 12)
 i                  = annual_mortgage_rate / 100 / 12
-s                  = (1 + annual_invest_rate / 100) ** (1 / 12) - 1
-inflation_deflator = (1 + inflation_rate / 100) ** years
-
-def fmt(n): return str(f"{n:,.0f}").replace(",", ".")
 
 def monthly_payment(principal, monthly_rate, n_months):
     if principal <= 0: return 0.0
