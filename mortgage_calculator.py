@@ -169,6 +169,8 @@ with col2:
 # ── Calculations ──────────────────────────────────────────────────────────────
 N                  = int(years * 12)
 i                  = annual_mortgage_rate / 100 / 12
+s                  = (1 + annual_invest_rate / 100) ** (1 / 12) - 1
+inflation_deflator = (1 + inflation_rate / 100) ** years
 
 def monthly_payment(principal, monthly_rate, n_months):
     if principal <= 0: return 0.0
