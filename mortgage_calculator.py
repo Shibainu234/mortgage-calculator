@@ -148,6 +148,58 @@ html, body, [class*="css"] {
 #MainMenu { visibility: hidden; }
 footer { visibility: hidden; }
 .stDeployButton { display: none; }
+
+/* ── Mobile responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+    /* Stack all Streamlit columns vertically */
+    [data-testid="column"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }
+
+    /* Smaller hero */
+    .hero { padding: 24px 20px; margin-bottom: 20px; }
+    .hero h1 { font-size: 1.5rem; }
+    .hero p  { font-size: 0.9rem; }
+
+    /* Cards full width, smaller padding */
+    .result-card { padding: 18px; margin-bottom: 16px; }
+
+    /* Smaller row text */
+    .row { font-size: 0.82rem; padding: 8px 0; }
+    .row-value.highlight,
+    .row-value.highlight-teal { font-size: 0.95rem; }
+
+    /* Real value box */
+    .row-real { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .row-real .row-value-real { font-size: 1.1rem; }
+
+    /* Verdict */
+    .verdict { padding: 16px 18px; }
+    .verdict-title { font-size: 1rem; }
+
+    /* Breakeven */
+    .breakeven { padding: 18px 20px; }
+    .breakeven-rate { font-size: 1.6rem; }
+
+    /* Metric cards — 2 per row on mobile */
+    .metric-card { padding: 14px 16px; margin-bottom: 10px; }
+    .metric-value { font-size: 1.1rem; }
+
+    /* Sensitivity table — horizontal scroll */
+    [data-testid="stDataFrame"] {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Section titles */
+    .section-title { font-size: 0.95rem; margin: 20px 0 12px 0; }
+
+    /* Inputs — larger touch targets */
+    input[type="number"] { font-size: 1rem !important; padding: 10px !important; }
+}
 </style>
 """, unsafe_allow_html=True)
 
