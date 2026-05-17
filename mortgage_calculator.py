@@ -83,6 +83,24 @@ html, body, [class*="css"] {
 .row-value.highlight-teal { color: #38b2ac; font-size: 1rem; }
 .row-value.real { color: #a0aec0; font-size: 0.85rem; font-weight: 400; }
 
+/* Real value highlight row */
+.row-real {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    margin-top: 12px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+}
+.row-real.blue { background: #ebf4ff; }
+.row-real.teal { background: #e6fffa; }
+.row-real .row-label-real { color: #4a5568; font-weight: 500; }
+.row-real .row-value-real { font-size: 1.25rem; font-weight: 700; }
+.row-real.blue .row-value-real { color: #4f6ef7; }
+.row-real.teal .row-value-real { color: #2c9e98; }
+.row-real .row-sub { font-size: 0.75rem; color: #718096; margin-top: 2px; }
+
 /* Verdict box */
 .verdict {
     border-radius: 12px;
@@ -217,7 +235,13 @@ with col1:
     <div class="row"><span class="row-label">Měsíční splátka</span><span class="row-value">{fmt(A1)} CZK</span></div>
     <div class="row"><span class="row-label">Investovaný kapitál</span><span class="row-value">{fmt(P_init)} CZK</span></div>
     <div class="row"><span class="row-label">Budoucí hodnota (nominální)</span><span class="row-value highlight">{fmt(FV1)} CZK</span></div>
-    <div class="row"><span class="row-label">Budoucí hodnota (reálná)</span><span class="row-value real">{fmt(FV1_real)} CZK v dnešních Kč</span></div>
+    <div class="row-real blue">
+        <div>
+            <div class="row-label-real">Budoucí hodnota (reálná)</div>
+            <div class="row-sub">v dnešních Kč po inflaci {inflation_rate:.1f} % p.a.</div>
+        </div>
+        <div class="row-value-real">{fmt(FV1_real)} CZK</div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -229,7 +253,13 @@ with col2:
     <div class="row"><span class="row-label">Měsíční splátka</span><span class="row-value">{fmt(A2)} CZK</span></div>
     <div class="row"><span class="row-label">Měsíční úspora (investovaná)</span><span class="row-value">{fmt(delta_A)} CZK</span></div>
     <div class="row"><span class="row-label">Budoucí hodnota (nominální)</span><span class="row-value highlight-teal">{fmt(FV2)} CZK</span></div>
-    <div class="row"><span class="row-label">Budoucí hodnota (reálná)</span><span class="row-value real">{fmt(FV2_real)} CZK v dnešních Kč</span></div>
+    <div class="row-real teal">
+        <div>
+            <div class="row-label-real">Budoucí hodnota (reálná)</div>
+            <div class="row-sub">v dnešních Kč po inflaci {inflation_rate:.1f} % p.a.</div>
+        </div>
+        <div class="row-value-real">{fmt(FV2_real)} CZK</div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
